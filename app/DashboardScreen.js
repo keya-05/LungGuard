@@ -1,24 +1,25 @@
 // app/dashboard.js
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions, Alert, Modal } from 'react-native';
-import { router } from 'expo-router';
-import { useTheme } from '@react-navigation/native';
-import { LineChart } from 'react-native-chart-kit';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '@react-navigation/native';
+import { router } from 'expo-router';
+import { useEffect, useState } from 'react';
+import { Alert, Dimensions, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import FindDoctorScreen from '../components/FindDoctorScreen';
 import { useThemeContext } from '../context/ThemeContext';
-import FindDoctorScreen from '../components/FindDoctorScreen'; // ✅ ADDED
+// ✅ Import the custom colored chart
+import { ColoredLineChart, getLegendItems } from './configChart';
 
 const DashboardScreen = () => {
   const { colors } = useTheme();
   const { theme: currentTheme, toggleTheme } = useThemeContext();
 
   const [isMenuVisible, setMenuVisible] = useState(false);
-  const [showFindDoctor, setShowFindDoctor] = useState(false); // ✅ ADDED
+  const [showFindDoctor, setShowFindDoctor] = useState(false);
   const [assessmentData, setAssessmentData] = useState([
     { date: 'Jan', score: 22 },
-    { date: 'Feb', score: 20 },
+    { date: 'Feb', score: 12 },
     { date: 'Mar', score: 24 },
-    { date: 'Apr', score: 23 },
+    { date: 'Apr', score: 26 },
     { date: 'May', score: 25 },
   ]);
 
@@ -34,28 +35,11 @@ const DashboardScreen = () => {
     }
   };
 
-  const chartConfig = {
-    backgroundGradientFrom: colors.card,
-    backgroundGradientTo: colors.card,
-    decimalPlaces: 0,
-    color: (opacity = 1) => colors.primary,
-    labelColor: (opacity = 1) => colors.text,
-    style: {
-      borderRadius: 16,
-    },
-    propsForDots: {
-      r: '6',
-      strokeWidth: '2',
-      stroke: colors.primary,
-    },
-  };
-
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
         <Text style={[styles.welcomeText, { color: colors.text }]}>Welcome Back!</Text>
         <View style={styles.rightIconsContainer}>
-          {/* Custom Toggle Button with Icon */}
           <TouchableOpacity
             style={[styles.themeToggleBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
             onPress={toggleTheme}
@@ -67,7 +51,6 @@ const DashboardScreen = () => {
             />
           </TouchableOpacity>
 
-          {/* Gear Icon */}
           <TouchableOpacity style={styles.gearIconContainer} onPress={() => setMenuVisible(true)}>
             <Ionicons name="settings-outline" size={28} color={colors.text} />
           </TouchableOpacity>
@@ -125,7 +108,6 @@ const DashboardScreen = () => {
           <Text style={[styles.featureButtonText, { color: colors.text }]}>Connect to Local Doctors</Text>
         </TouchableOpacity>
 
-        {/* ✅ NEW: Find Nearby Doctors Button */}
         <TouchableOpacity
           style={[styles.featureButton, styles.findDoctorButton, { backgroundColor: colors.card }]}
           onPress={() => setShowFindDoctor(true)}
@@ -138,33 +120,34 @@ const DashboardScreen = () => {
 
       {/* Lung Condition Graph */}
       <Text style={[styles.sectionTitle, { color: colors.text }]}>Your Lung Condition Progress</Text>
+      
+      {/* ✅ Legend */}
+      <View style={styles.legendContainer}>
+        {getLegendItems().map((item, index) => (
+          <View key={index} style={styles.legendItem}>
+            <View style={[styles.legendColor, { backgroundColor: item.color }]} />
+            <Text style={[styles.legendText, { color: colors.text }]}>{item.label}</Text>
+          </View>
+        ))}
+      </View>
+
       {assessmentData.length > 0 ? (
         <View style={[styles.chartContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <LineChart
-            data={{
-              labels: assessmentData.map(item => item.date),
-              datasets: [{
-                data: assessmentData.map(item => item.score)
-              }]
-            }}
+          {/* ✅ Custom Colored Line Chart */}
+          <ColoredLineChart
+            data={assessmentData}
             width={Dimensions.get('window').width - 40}
             height={220}
-            yAxisLabel=""
-            yAxisSuffix="s"
-            yAxisInterval={1}
-            chartConfig={chartConfig}
-            bezier
-            style={{
-              marginVertical: 8,
-              borderRadius: 16
-            }}
+            colors={colors}
           />
         </View>
       ) : (
-        <Text style={{ color: colors.text, textAlign: 'center', marginTop: 20 }}>No assessment data available yet.</Text>
+        <Text style={{ color: colors.text, textAlign: 'center', marginTop: 20 }}>
+          No assessment data available yet.
+        </Text>
       )}
 
-      {/* ✅ NEW: Find Doctor Modal */}
+      {/* Find Doctor Modal */}
       <Modal
         visible={showFindDoctor}
         animationType="slide"
@@ -247,9 +230,8 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     textAlign: 'center',
   },
-  // ✅ NEW: Find Doctor Button Styles
   findDoctorButton: {
-    width: '100%', // Make it full width to stand out
+    width: '100%',
   },
   featureSubtext: {
     marginTop: 5,
@@ -262,6 +244,28 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 15,
   },
+  legendContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 15,
+    paddingHorizontal: 10,
+    flexWrap: 'wrap',
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 5,
+  },
+  legendColor: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    marginRight: 6,
+  },
+  legendText: {
+    fontSize: 11,
+    fontWeight: '500',
+  },
   chartContainer: {
     borderRadius: 16,
     paddingVertical: 10,
@@ -272,8 +276,8 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
     borderWidth: 1,
+    overflow: 'hidden',
   },
-  // Modal Styles
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
@@ -304,7 +308,6 @@ const styles = StyleSheet.create({
     marginLeft: 15,
     fontWeight: '500',
   },
-  // ✅ NEW: Close Button for Find Doctor Modal
   closeButton: {
     position: 'absolute',
     top: 50,
