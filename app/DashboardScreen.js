@@ -4,9 +4,7 @@ import { useTheme } from '@react-navigation/native';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Alert, Dimensions, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import FindDoctorScreen from '../components/FindDoctorScreen';
 import { useThemeContext } from '../context/ThemeContext';
-// ✅ Import the custom colored chart
 import { ColoredLineChart, getLegendItems } from './configChart';
 
 const DashboardScreen = () => {
@@ -153,7 +151,6 @@ const DashboardScreen = () => {
         animationType="slide"
         onRequestClose={() => setShowFindDoctor(false)}
       >
-        <FindDoctorScreen />
         <TouchableOpacity
           style={styles.closeButton}
           onPress={() => setShowFindDoctor(false)}
